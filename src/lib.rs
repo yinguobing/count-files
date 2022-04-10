@@ -1,3 +1,4 @@
+use comfy_table::Table;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -40,7 +41,7 @@ fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn
         let path = entry.path();
         if path.is_dir() {
             if let Err(e) = scan(path.as_path(), counter) {
-                println!("WARNING: {}. Skip {}",e,  path.to_str().unwrap() );
+                println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
             }
         } else {
             if let Some(extension) = path.extension() {
@@ -53,6 +54,26 @@ fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn
     Ok(())
 }
 
+// Print the counting result.
+fn print_to_screen(counter: &HashMap<String, usize>) {
+    // Sort the result by file count.
+    let mut counter: Vec<(&String, &usize)> = counter.iter().collect();
+    counter.sort_by(|a, b| b.1.cmp(a.1));
+    
+    // Insert table rows.
+    let mut table = Table::new();
+    table.set_header(vec!["File type", "Count"]);
+    for (ext, count) in counter {
+        table.add_row(vec![ext, &count.to_string()]);
+    }
+
+    // Align the numbers to right.
+    if let Some(column) = table.get_column_mut(1) {
+        column.set_cell_alignment(comfy_table::CellAlignment::Right)
+    }
+    println!("{table}");
+}
+
 // Count all the files in this function.
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
@@ -60,6 +81,6 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     let target_path = Path::new(&config.target_path);
     scan(&target_path, &mut counter)?;
     println!("Counting files in {}", config.target_path);
-    println!("Total files: {:?}", counter);
+    print_to_screen(&counter);
     Ok(())
 }

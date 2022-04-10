@@ -1,6 +1,8 @@
 use std::env;
 use std::path::Path;
 use std::process;
+use std::fs;
+use std::error::Error;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -10,7 +12,10 @@ fn main() {
         process::exit(1);
     });
 
-    println!("Counting files in {:?}", config.target_path);
+    if let Err(e) = run(&config) {
+        println!("Application error: {}", e);
+        process::exit(1);
+    }
 }
 
 // Config struct converts the user inputs into arguments.
@@ -34,4 +39,11 @@ impl Config {
         // All is well.
         Ok(Self {target_path: target_path})
     }
+}
+
+// Count all the files in this function.
+fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+    println!("Counting files in {}", config.target_path);
+    let entries = fs::read_dir(config.target_path.clone())?;
+    Ok(())
 }

@@ -39,7 +39,7 @@ fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            scan(path.as_path(), counter);
+            scan(path.as_path(), counter)?;
         } else {
             if let Some(extension) = path.extension() {
                 let extension = extension.to_str().unwrap().to_string();
@@ -56,7 +56,7 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
     let mut counter: HashMap<String, usize> = HashMap::new();
     let target_path = Path::new(&config.target_path);
-    scan(&target_path, &mut counter);
+    scan(&target_path, &mut counter)?;
     println!("Counting files in {}", config.target_path);
     println!("Total files: {:?}", counter);
     Ok(())

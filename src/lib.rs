@@ -39,7 +39,9 @@ fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            scan(path.as_path(), counter)?;
+            if let Err(e) = scan(path.as_path(), counter) {
+                println!("WARNING: {}. Skip {}",e,  path.to_str().unwrap() );
+            }
         } else {
             if let Some(extension) = path.extension() {
                 let extension = extension.to_str().unwrap().to_string();

@@ -79,8 +79,8 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
     let mut counter: HashMap<String, usize> = HashMap::new();
     let target_path = Path::new(&config.target_path);
-    scan(&target_path, &mut counter)?;
     println!("Counting files in {}", config.target_path);
+    scan(&target_path, &mut counter)?;
     print_to_screen(&counter);
     Ok(())
 }

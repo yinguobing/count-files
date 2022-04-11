@@ -1,16 +1,20 @@
+use clap::Parser;
 use comfy_table::Table;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-// Config struct converts the user inputs into arguments.
-pub struct Config {
+/// Counting files in a directory.
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+pub struct Args {
+    /// Target directory to be scanned.
     pub target_path: String,
 }
 
-impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+impl Args {
+    pub fn new(args: &[String]) -> Result<Args, &'static str> {
         // Target dir provided?
         if args.len() < 2 {
             return Err(
@@ -59,7 +63,6 @@ fn print_to_screen(counter: &HashMap<String, usize>) {
     // Sort the result by file count.
     let mut counter: Vec<(&String, &usize)> = counter.iter().collect();
     counter.sort_by(|a, b| b.1.cmp(a.1));
-    
     // Insert table rows.
     let mut table = Table::new();
     table.set_header(vec!["File type", "Count"]);
@@ -75,7 +78,7 @@ fn print_to_screen(counter: &HashMap<String, usize>) {
 }
 
 // Count all the files in this function.
-pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
     let mut counter: HashMap<String, usize> = HashMap::new();
     let target_path = Path::new(&config.target_path);

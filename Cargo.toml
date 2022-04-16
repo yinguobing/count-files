@@ -1,11 +1,15 @@
 [package]
 name = "count_files"
 version = "0.1.0"
-edition = "2021"
+authors = ["Yin Guobing <yinguobing@gmail.com>"]
 description = "Count files by extension."
+documentation = "https://github.com/yinguobing/count_files"
+homepage = "https://github.com/yinguobing/count_files"
+repository = "https://github.com/yinguobing/count_files"
+keywords = ["count files"]
+categories = ["command-line-utilities"]
+edition = "2021"
 license = "MIT OR Apache-2.0"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 comfy-table = "5.0.1"

@@ -1,11 +1,11 @@
-# count_files
+# count-files
 A simple command line tool to count files by extension.
 
 ## How to use
 Copy the executable file to your `$PATH` and run:
 
 ```bash
-count_files /path/to/target_dir
+count-files /path/to/target_dir
 ```
 
 Output sample:
@@ -27,12 +27,12 @@ Done in 0 seconds.
 ```
 
 ## Building
-count_files is written in Rust, you need to [install Rust](https://www.rust-lang.org/tools/install) to compile it.
+count-files is written in Rust, you need to [install Rust](https://www.rust-lang.org/tools/install) to compile it.
 
 To build:
 
 ```bash
-git clone https://github.com/yinguobing/count_files.git
-cd count_files
+git clone https://github.com/yinguobing/count-files.git
+cd count-files
 cargo build --release
 ```

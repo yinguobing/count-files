@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 comfy-table = "5.0.1"
 clap = { version = "3.1.8", features = ["derive"] }
+indicatif = "0.16.2"

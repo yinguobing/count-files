@@ -1,9 +1,11 @@
 use clap::Parser;
 use comfy_table::Table;
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
+use std::time::Instant;
 
 /// Counting files in a directory.
 #[derive(Parser)]
@@ -38,13 +40,21 @@ impl Args {
 }
 
 // Scan the target path and count all the files.
-fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn Error>> {
+fn scan(
+    path: &Path,
+    counter: &mut HashMap<String, usize>,
+    pb: ProgressBar,
+) -> Result<(), Box<dyn Error>> {
+    // Tell the user where are we now.
+    pb.set_message(format!("{}", path.to_str().unwrap()));
+
+    // Loop the entries.
     let entries = fs::read_dir(path)?;
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            if let Err(e) = scan(path.as_path(), counter) {
+            if let Err(e) = scan(path.as_path(), counter, pb.clone()) {
                 println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
             }
         } else {
@@ -58,12 +68,13 @@ fn scan(path: &Path, counter: &mut HashMap<String, usize>) -> Result<(), Box<dyn
     Ok(())
 }
 
-// Print the counting result.
+// Print the counting result in a table.
 fn print_to_screen(counter: &HashMap<String, usize>) {
     // Sort the result by file count.
     let mut counter: Vec<(&String, &usize)> = counter.iter().collect();
     counter.sort_by(|a, b| b.1.cmp(a.1));
-    // Insert table rows.
+
+    // Create the result table.
     let mut table = Table::new();
     table.set_header(vec!["File type", "Count"]);
     for (ext, count) in counter {
@@ -77,13 +88,29 @@ fn print_to_screen(counter: &HashMap<String, usize>) {
     println!("{table}");
 }
 
-// Count all the files in this function.
+// Count all the files.
 pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
     let mut counter: HashMap<String, usize> = HashMap::new();
     let target_path = Path::new(&config.target_path);
-    println!("Counting files in {}", config.target_path);
-    scan(&target_path, &mut counter)?;
+
+    // Setup a progress bar.
+    let spinner_style = ProgressStyle::default_spinner()
+        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
+        .template("{prefix:.bold.dim} {spinner} {wide_msg}");
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(spinner_style.clone());
+    pb.set_prefix("Scanning ");
+
+    // Setup a duration meter.
+    let started = Instant::now();
+
+    // Let the party begin.
+    scan(&target_path, &mut counter, pb.clone())?;
+
+    // Post process
+    pb.finish_and_clear();
+    println!("Done in {}.", HumanDuration(started.elapsed()));
     print_to_screen(&counter);
     Ok(())
 }

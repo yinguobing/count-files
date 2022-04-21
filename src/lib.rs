@@ -15,6 +15,28 @@ pub struct Args {
     pub target_path: String,
 }
 
+// A struct to record the file count number and the total storage size.
+struct Counter {
+    count: usize,
+    storage_size: usize,
+}
+
+impl Counter {
+    // Create a new Counter struct.
+    pub fn new(count: usize, storage_size: usize) -> Counter {
+        Counter {
+            count: count,
+            storage_size: storage_size,
+        }
+    }
+
+    // Update the counter.
+    pub fn update(&mut self, count: i64, storage_size: i64) {
+        self.count = (self.count as i64 + count) as usize;
+        self.storage_size = (self.storage_size as i64 + storage_size) as usize;
+    }
+}
+
 impl Args {
     pub fn new(args: &[String]) -> Result<Args, &'static str> {
         // Target dir provided?
@@ -42,7 +64,7 @@ impl Args {
 // Scan the target path and count all the files.
 fn scan(
     path: &Path,
-    counter: &mut HashMap<String, usize>,
+    record: &mut HashMap<String, Counter>,
     pb: ProgressBar,
 ) -> Result<(), Box<dyn Error>> {
     // Tell the user where are we now.
@@ -54,14 +76,14 @@ fn scan(
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            if let Err(e) = scan(path.as_path(), counter, pb.clone()) {
+            if let Err(e) = scan(path.as_path(), record, pb.clone()) {
                 println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
             }
         } else {
             if let Some(extension) = path.extension() {
                 let extension = extension.to_str().unwrap().to_string();
-                let count = counter.entry(extension).or_insert(0);
-                *count += 1;
+                let counter = record.entry(extension).or_insert(Counter::new(0, 0));
+                counter.update(1, 0);
             }
         }
     }
@@ -69,16 +91,16 @@ fn scan(
 }
 
 // Print the counting result in a table.
-fn print_to_screen(counter: &HashMap<String, usize>) {
+fn print_to_screen(record: &HashMap<String, Counter>) {
     // Sort the result by file count.
-    let mut counter: Vec<(&String, &usize)> = counter.iter().collect();
-    counter.sort_by(|a, b| b.1.cmp(a.1));
+    let mut record: Vec<(&String, &Counter)> = record.iter().collect();
+    record.sort_by(|a, b| b.1.count.cmp(&a.1.count));
 
     // Create the result table.
     let mut table = Table::new();
     table.set_header(vec!["File type", "Count"]);
-    for (ext, count) in counter {
-        table.add_row(vec![ext, &count.to_string()]);
+    for (ext, counter) in record {
+        table.add_row(vec![ext, &counter.count.to_string()]);
     }
 
     // Align the numbers to right.
@@ -91,7 +113,7 @@ fn print_to_screen(counter: &HashMap<String, usize>) {
 // Count all the files.
 pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
     // Use a hashmap to record different files count.
-    let mut counter: HashMap<String, usize> = HashMap::new();
+    let mut record: HashMap<String, Counter> = HashMap::new();
     let target_path = Path::new(&config.target_path);
 
     // Setup a progress bar.
@@ -106,11 +128,11 @@ pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
     let started = Instant::now();
 
     // Let the party begin.
-    scan(&target_path, &mut counter, pb.clone())?;
+    scan(&target_path, &mut record, pb.clone())?;
 
     // Post process
     pb.finish_and_clear();
     println!("Done in {}.", HumanDuration(started.elapsed()));
-    print_to_screen(&counter);
+    print_to_screen(&record);
     Ok(())
 }

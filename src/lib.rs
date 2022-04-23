@@ -37,28 +37,6 @@ impl Counter {
     }
 }
 
-impl Args {
-    pub fn new(args: &[String]) -> Result<Args, &'static str> {
-        // Target dir provided?
-        if args.len() < 2 {
-            return Err(
-                "target directory not assigned.\nTry running like this:\n   count_files /path/to/dir",
-            );
-        }
-        // Target dir exist?
-        let target_path = args[1].to_string();
-        if !Path::new(&target_path).exists() {
-            return Err("target not found.");
-        }
-        // Target is a directory?
-        if !Path::new(&target_path).is_dir() {
-            return Err("target is not a directory.");
-        }
-        // All is well.
-        Ok(Self { target_path })
-    }
-}
-
 // Scan the target path and count all the files.
 fn scan(
     path: &Path,

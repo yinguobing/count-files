@@ -25,8 +25,8 @@ impl Counter {
     // Create a new Counter struct.
     pub fn new(count: usize, storage_size: usize) -> Counter {
         Counter {
-            count: count,
-            storage_size: storage_size,
+            count,
+            storage_size,
         }
     }
 
@@ -55,9 +55,7 @@ impl Args {
             return Err("target is not a directory.");
         }
         // All is well.
-        Ok(Self {
-            target_path: target_path,
-        })
+        Ok(Self { target_path })
     }
 }
 
@@ -68,7 +66,7 @@ fn scan(
     pb: ProgressBar,
 ) -> Result<(), Box<dyn Error>> {
     // Tell the user where are we now.
-    pb.set_message(format!("{}", path.to_str().unwrap()));
+    pb.set_message(path.to_str().unwrap().to_string());
 
     // Loop the entries.
     let entries = fs::read_dir(path)?;
@@ -79,12 +77,12 @@ fn scan(
             if let Err(e) = scan(path.as_path(), record, pb.clone()) {
                 println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
             }
-        } else {
-            if let Some(extension) = path.extension() {
-                let extension = extension.to_str().unwrap().to_string();
-                let counter = record.entry(extension).or_insert(Counter::new(0, 0));
-                counter.update(1, 0);
-            }
+        } else if let Some(extension) = path.extension() {
+            let extension = extension.to_str().unwrap().to_string();
+            let counter = record
+                .entry(extension)
+                .or_insert_with(|| Counter::new(0, 0));
+            counter.update(1, 0);
         }
     }
     Ok(())
@@ -121,14 +119,14 @@ pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
     let pb = ProgressBar::new_spinner();
-    pb.set_style(spinner_style.clone());
+    pb.set_style(spinner_style);
     pb.set_prefix("Scanning ");
 
     // Setup a duration meter.
     let started = Instant::now();
 
     // Let the party begin.
-    scan(&target_path, &mut record, pb.clone())?;
+    scan(target_path, &mut record, pb.clone())?;
 
     // Post process
     pb.finish_and_clear();

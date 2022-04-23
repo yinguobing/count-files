@@ -1,6 +1,6 @@
 [package]
 name = "count-files"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Yin Guobing <yinguobing@gmail.com>"]
 description = "Count files by extension."
 documentation = "https://github.com/yinguobing/count-files"

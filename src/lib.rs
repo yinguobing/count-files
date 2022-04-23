@@ -1,6 +1,6 @@
 use clap::Parser;
 use comfy_table::Table;
-use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
+use indicatif::{HumanBytes, HumanDuration, ProgressBar, ProgressStyle};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -17,13 +17,13 @@ pub struct Args {
 
 // A struct to record the file count number and the total storage size.
 struct Counter {
-    count: usize,
-    storage_size: usize,
+    count: u64,
+    storage_size: u64,
 }
 
 impl Counter {
     // Create a new Counter struct.
-    pub fn new(count: usize, storage_size: usize) -> Counter {
+    pub fn new(count: u64, storage_size: u64) -> Counter {
         Counter {
             count,
             storage_size,
@@ -32,8 +32,8 @@ impl Counter {
 
     // Update the counter.
     pub fn update(&mut self, count: i64, storage_size: i64) {
-        self.count = (self.count as i64 + count) as usize;
-        self.storage_size = (self.storage_size as i64 + storage_size) as usize;
+        self.count = (self.count as i64 + count) as u64;
+        self.storage_size = (self.storage_size as i64 + storage_size) as u64;
     }
 }
 
@@ -73,6 +73,8 @@ fn scan(
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
+
+        // The entry is a directory or a file?
         if path.is_dir() {
             if let Err(e) = scan(path.as_path(), record, pb.clone()) {
                 println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
@@ -82,7 +84,14 @@ fn scan(
             let counter = record
                 .entry(extension)
                 .or_insert_with(|| Counter::new(0, 0));
-            counter.update(1, 0);
+            // Get the size of the file in bytes.
+            let mut file_size: i64 = 0;
+            if let Ok(attrribute) = fs::metadata(&path) {
+                file_size = attrribute.len() as i64;
+            }
+
+            // Update the counter.
+            counter.update(1, file_size);
         }
     }
     Ok(())
@@ -96,14 +105,20 @@ fn print_to_screen(record: &HashMap<String, Counter>) {
 
     // Create the result table.
     let mut table = Table::new();
-    table.set_header(vec!["File type", "Count"]);
+    table.set_header(vec!["File type", "Count", "Total size"]);
     for (ext, counter) in record {
-        table.add_row(vec![ext, &counter.count.to_string()]);
+        table.add_row(vec![
+            ext,
+            &counter.count.to_string(),
+            &HumanBytes(counter.storage_size).to_string(),
+        ]);
     }
 
     // Align the numbers to right.
-    if let Some(column) = table.get_column_mut(1) {
-        column.set_cell_alignment(comfy_table::CellAlignment::Right)
+    for i in 1..3 {
+        if let Some(column) = table.get_column_mut(i) {
+            column.set_cell_alignment(comfy_table::CellAlignment::Right)
+        }
     }
     println!("{table}");
 }

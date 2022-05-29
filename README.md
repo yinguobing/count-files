@@ -1,5 +1,8 @@
 # count-files
+
 A simple command line tool to count files by extension.
+
+[![Rust](https://github.com/yinguobing/count-files/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/yinguobing/count-files/actions/workflows/rust.yml)
 
 ## How to use
 Open a terminal and run:

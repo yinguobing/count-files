@@ -1,13 +1,13 @@
 use clap::Parser;
+use count_files::{run, Args};
 use std::process;
 
-use count_files::{Args, run};
-
 fn main() {
+    env_logger::init();
     let args = Args::parse();
 
     if let Err(e) = run(&args) {
-        println!("Application error: {}", e);
+        eprintln!("Application error: {}", e);
         process::exit(1);
     }
 }

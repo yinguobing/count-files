@@ -1,6 +1,7 @@
 use clap::Parser;
 use comfy_table::Table;
 use indicatif::{HumanBytes, HumanDuration, ProgressBar, ProgressStyle};
+use log::warn;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -55,7 +56,7 @@ fn scan(
         // The entry is a directory or a file?
         if path.is_dir() {
             if let Err(e) = scan(path.as_path(), record, pb.clone()) {
-                println!("WARNING: {}. Skip {}", e, path.to_str().unwrap());
+                warn!(" {}. Skip {}", e, path.to_str().unwrap());
             }
         } else if let Some(extension) = path.extension() {
             let extension = extension.to_str().unwrap().to_string();
@@ -123,7 +124,7 @@ pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
 
     // Post process
     pb.finish_and_clear();
-    println!("Done in {}.", HumanDuration(started.elapsed()));
+    println!("Finished in {}.", HumanDuration(started.elapsed()));
     print_to_screen(&record);
     Ok(())
 }

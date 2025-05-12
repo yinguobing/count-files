@@ -64,10 +64,11 @@ fn scan(
                 .entry(extension)
                 .or_insert_with(|| Counter::new(0, 0));
             // Get the size of the file in bytes.
-            let mut file_size: i64 = 0;
-            if let Ok(attribute) = fs::metadata(&path) {
-                file_size = attribute.len() as i64;
-            }
+            let file_size: i64 = if let Ok(attribute) = fs::metadata(&path) {
+                attribute.len() as i64
+            } else {
+                0
+            };
 
             // Update the counter.
             counter.update(1, file_size);

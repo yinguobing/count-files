@@ -2,11 +2,7 @@ use clap::Parser;
 use comfy_table::Table;
 use indicatif::{HumanBytes, HumanDuration, ProgressBar, ProgressStyle};
 use log::warn;
-use std::collections::HashMap;
-use std::error::Error;
-use std::fs;
-use std::path::Path;
-use std::time::Instant;
+use std::{collections::HashMap, error::Error, fs, path::Path, time::Instant};
 
 /// Counting files in a directory.
 #[derive(Parser)]
@@ -48,23 +44,21 @@ fn scan(
     pb.set_message(path.to_str().unwrap().to_string());
 
     // Loop the entries.
-    let entries = fs::read_dir(path)?;
-    for entry in entries {
-        let entry = entry?;
-        let path = entry.path();
+    for entry in fs::read_dir(path)? {
+        let p = entry?.path();
 
         // The entry is a directory or a file?
-        if path.is_dir() {
-            if let Err(e) = scan(path.as_path(), record, pb.clone()) {
-                warn!(" {}. Skip {}", e, path.to_str().unwrap());
+        if p.is_dir() {
+            if let Err(e) = scan(p.as_path(), record, pb.clone()) {
+                warn!(" {}. Skip {}", e, p.to_str().unwrap());
             }
-        } else if let Some(extension) = path.extension() {
+        } else if let Some(extension) = p.extension() {
             let extension = extension.to_str().unwrap().to_string();
             let counter = record
                 .entry(extension)
                 .or_insert_with(|| Counter::new(0, 0));
             // Get the size of the file in bytes.
-            let file_size: i64 = if let Ok(attribute) = fs::metadata(&path) {
+            let file_size: i64 = if let Ok(attribute) = fs::metadata(&p) {
                 attribute.len() as i64
             } else {
                 0

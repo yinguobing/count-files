@@ -1,6 +1,6 @@
 [package]
 name = "count-files"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Yin Guobing <yinguobing@gmail.com>"]
 description = "Count files by extension."
 documentation = "https://github.com/yinguobing/count-files"
@@ -12,8 +12,30 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-comfy-table = "5.0.1"
-clap = { version = "3.1.8", features = ["derive"] }
-indicatif = "0.16.2"
-log = "0.4.17"
-env_logger = "0.9.0"
+comfy-table = "7.1.4"
+clap = { version = "4.5.38", features = ["derive"] }
+indicatif = "0.17.11"
+log = "0.4.27"
+env_logger = "0.11.8"
+
+# Build a DEB package
+[package.metadata.deb]
+maintainer = "Yin Guobing <yinguobing@gmail.com>"
+copyright = "2024, Yin Guobing <yinguobing@gmail.com>"
+extended-description = """\
+A simple file counter."""
+depends = "$auto"
+section = "utility"
+priority = "optional"
+assets = [
+    [
+        "target/release/count-files",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "README.md",
+        "usr/share/doc/count-files/README",
+        "644",
+    ],
+]

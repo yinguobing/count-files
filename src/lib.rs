@@ -95,7 +95,7 @@ fn print_to_screen(record: &HashMap<String, Counter>) {
 
     // Align the numbers to right.
     for i in 1..3 {
-        if let Some(column) = table.get_column_mut(i) {
+        if let Some(column) = table.column_mut(i) {
             column.set_cell_alignment(comfy_table::CellAlignment::Right)
         }
     }
@@ -109,12 +109,11 @@ pub fn run(config: &Args) -> Result<(), Box<dyn Error>> {
     let target_path = Path::new(&config.target_path);
 
     // Setup a progress bar.
-    let spinner_style = ProgressStyle::default_spinner()
-        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
-        .template("{prefix:.bold.dim} {spinner} {wide_msg}");
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(spinner_style);
-    pb.set_prefix("Scanning ");
+    let bar_style = ProgressStyle::with_template("{spinner} {msg}").unwrap();
+    let pb = ProgressBar::new_spinner()
+        .with_message("Counting...")
+        .with_style(bar_style);
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     // Setup a duration meter.
     let started = Instant::now();
